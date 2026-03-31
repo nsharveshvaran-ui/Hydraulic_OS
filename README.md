@@ -1,3 +1,18 @@
+---
+title: Smart Flood Mitigation Network
+emoji: 🌊
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+app_port: 8000
+base_path: /web
+tags:
+  - openenv
+---
+
+
+
 # 🌊 ADAPTIVE SMART BIO-HYDRAULIC FLOOD MITIGATION NETWORK
 
 ## 🏆 OVERVIEW
