@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+import uvicorn
 
 app = FastAPI()
 
@@ -14,3 +15,9 @@ async def reset(request: Request):
 @app.post("/step")
 async def step(request: Request):
     return {"observation": "Monitoring...", "reward": 1.0, "done": False, "info": {}}
+
+def main(host: str = "0.0.0.0", port: int = 8000):
+    uvicorn.run(app, host=host, port=port)
+
+if __name__ == '__main__':
+    main()
