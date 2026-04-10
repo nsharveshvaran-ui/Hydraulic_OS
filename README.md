@@ -1,129 +1,124 @@
 ---
-title: Smart Flood Mitigation Network
+title: "Multi-Zone Flood Triage & Mitigation Network"
 emoji: 🌊
 colorFrom: blue
 colorTo: indigo
 sdk: docker
-pinned: false
 app_port: 8000
-base_path: /
+pinned: false
+license: mit
 ---
 
+# 🌊 Hydraulic_OS v9.0
+### Adaptive Bio-Hydraulic Flood Mitigation Network
 
-# 🌊 ADAPTIVE SMART BIO-HYDRAULIC FLOOD MITIGATION NETWORK
+**Hydraulic_OS v9.0** is an industrial-grade "Digital Twin" environment built to test AI decision-making under **Resource Scarcity**, **Stochastic Sensor Faults**, and **Ethical Triage**.
 
-## 🏆 OVERVIEW
+> **Why an LLM?**
+> *This environment demands an LLM because it combines partial observability (sensor faults), multi-objective trade-offs (life-safety vs. property), and temporal reasoning across a dynamic storm curve — tasks that static, rule-based scripts cannot generalize across.*
 
-As climate change accelerates, urban centers face increasingly volatile rainfall. Traditional static flood management systems react too slowly to flash floods, leading to catastrophic overflow.
+Urban flooding is a non-linear challenge. Static drainage systems fail because they cannot adapt to hardware degradation or reprioritize critical infrastructure during peak surges. This environment treats flood control as a **High-Stakes Control Problem** where saving one urban sector often requires the calculated sacrifice of another.
 
-We built an **Adaptive Smart Bio-Hydraulic Network** — an autonomous, real-time, **RL-ready environment paired with a deterministic baseline agent**.
+---
 
-### ⚡ WHAT THE SYSTEM DOES
+## 🏆 Project Overview
 
-- Monitors distributed water levels  
-- Dynamically routes water via smart gates  
-- Adjusts variable-power pumps in real time  
+| Property | Value |
+| :--- | :--- |
+| **Zones** | 2 (Residential A, Hospital B) |
+| **Action Space** | 5 discrete tokens |
+| **Episode Length** | 6 steps |
+| **Reward Range** | 0.0 – 1.0 |
+| **Stochasticity** | Sensor faults (5% per step), silt accumulation (uniform random) |
 
-👉 **Prevents any sector from reaching critical flood capacity**
+---
 
-### ⚡ KEY DESIGN PRINCIPLE
+## 🏗️ Technical Architecture
 
-> Designed to be directly upgradable to a reinforcement learning controller without architectural changes.
+### 🔹 Physics Engine (`server/app.py`)
+The environment is governed by interconnected real-time mechanics:
+* **Drainage Efficiency:** `efficiency = ((100 - blockage) / 100) × thermal_multiplier`
+* **Storm Dynamics:** Rainfall follows a sinusoidal bell curve simulating a realistic weather event with a defined peak.
+* **Sensor Faults:** 5% probability per step that rainfall telemetry returns `[SENSOR_FAULT]`, forcing the agent to infer storm intensity from observed water-level deltas.
+* **Thermal Degradation:** If pump core temp exceeds 80°C, `thermal_multiplier` drops to 0.6, silently reducing drainage efficiency.
 
-# 🏗️ SYSTEM ARCHITECTURE
+### 🔹 Strategic Agent (`inference.py`)
+A memory-enabled agent that maintains a rolling episode history. By feeding the LLM previous turns, it achieves **Temporal Reasoning**, enabling it to:
+* Recognize when water levels rise despite max pumping (indicating the storm is peaking).
+* Infer rainfall intensity when sensors fault based on historical step data.
+* Time high-cost actions (flush, cool) to avoid battery exhaustion at critical phases.
 
-We developed a complete closed-loop simulation using an advanced asynchronous client-server architecture:
+---
 
-### 🔹 PHYSICS ENGINE (SERVER)
+## 🕹️ Action Space
+The agent selects one of five tokens per step, sharing a finite 100MW Power Grid:
 
-A custom environment built on `OpenEnv` that:
+| Action | Effect | Cost | Trade-off |
+| :--- | :--- | :--- | :--- |
+| `prioritize_hospital` | Max drain Hospital (B) | 30MW, +12°C | Protects life-safety; risks residential flood |
+| `prioritize_residential` | Max drain Residential (A) | 30MW, +12°C | Protects property; risks hospital collapse |
+| `high_pressure_flush` | Resets blockage to 0% | 70MW, +35°C | Restores full efficiency; massive thermal spike |
+| `emergency_cool` | Core temp −25°C | −10% Grid Health | Prevents meltdown; permanent grid damage |
+| `idle_recharge` | Battery +35MW | Zero drainage | Essential recovery; high flood risk during idle |
 
-- Simulates real-time rainfall (mm/hr)  
-- Tracks sector water levels  
-- Computes drainage dynamics based on pump power and gate states  
+---
 
-### 🔹 BASELINE AGENT (CLIENT)
+## 🎯 Reward Matrix & Triage
+The system enforces an ethical hierarchy through mathematically differentiated rewards:
 
-A deterministic expert system that:
+| Outcome | Reward | Condition |
+| :--- | :--- | :--- |
+| **Mission Success** | `1.0` | Storm survived, all infrastructure secured |
+| **Strategic Success** | `0.5` | System stable, blockage cleared |
+| **Residential Failure** | `0.3` | Hospital saved, property damage occurred (Triage) |
+| **Hospital Failure** | `0.0` | Life-safety breach — total mission failure |
+| **Hardware Meltdown** | `0.0` | Pump or grid collapse — total mission failure |
 
-- Scans all sectors continuously  
-- Identifies the highest-risk zone  
-- Applies proportional mitigation strategies in real time  
+---
 
-### 🔹 HYBRID COMMUNICATION BRIDGE
-CONTROL PLANE → WebSockets
-TELEMETRY PLANE → OS Shared Memory
+## 🖥️ Cybernetic Command Center
+The environment ships with a real-time SCADA-style dashboard accessible via the root endpoint:
+* **CRT Scanline Aesthetic** — mission-control visual style with Orbitron typography.
+* **Live Telemetry** — animated bars for battery, core temp, blockage, and zone water levels.
+* **Urgency Alarms** — blinking pulse alerts and audio cues on critical zone overflow.
+* **Sensor Fault Display** — rain bar dims and shows `[SENSOR_FAULT]` in red when telemetry is lost.
+* **Smooth Polling** — AJAX fetch every 2s; no page reloads.
 
-✔ Low latency  
-✔ Zero data loss  
-✔ Framework bypass for full telemetry  
+---
 
-# ⚙️ ENGINEERING HIGHLIGHTS
+## 💻 How to Run
 
-### 🧠 PROTOCOL FORGING ("PACIFIER PATTERN")
+### Prerequisites
+```bash
+pip install fastapi uvicorn openai requests
+```
 
-- Reverse-engineered strict Pydantic validation  
-- Injected dummy `message` field  
-- Successfully tunneled IoT control commands  
+### Environment Variables
 
-👉 Turned an NLP-only framework into a control system
+| Variable | Required | Description |
+| :--- | :--- | :--- |
+| `HF_TOKEN` | ✅ | API key for the LLM provider |
+| `MODEL_NAME` | Optional | Model to use (default: `gpt-4`) |
+| `API_BASE_URL` | Optional | LLM endpoint (default: `https://api.openai.com/v1`) |
 
-### 🧠 OS-LEVEL SIDE-CHANNEL BYPASS
+### 1. Start the Environment Server
+```bash
+uvicorn server.app:app --host 0.0.0.0 --port 8000
+# Dashboard available at http://localhost:8000
+```
 
-Problem:
-- Framework stripped sensor data
+### 2. Run Inference
+```bash
+export HF_TOKEN=your_api_key_here
+python inference.py
+```
 
-Solution:
-- Shared-memory JSON bridge (`tempfile`)  
-- Server writes → Agent reads asynchronously  
-
-👉 **Zero data loss + full state visibility**
-
-### 🧠 DYNAMIC BIO-HYDRAULIC CONTROL
-
-The agent actively prioritizes risk:
-SAFE (< 0.2) → Close gates (save power)
-RISING (> 0.6) → Scale pump output
-CRITICAL → Max intervention
-
-👉 Real-time adaptive flood mitigation
-
-# 🚀 FUTURE ROADMAP (PHASE 2)
-
-### 🔹 TRUE REINFORCEMENT LEARNING
-
-- Replace rule-based agent with PPO  
-- Learn optimal control policies automatically  
-- Handle non-linear fluid dynamics  
-
-### 🔹 PREDICTIVE FLOOD INTELLIGENCE
-
-- Add rainfall forecasting to state  
-- Shift from reactive → proactive mitigation  
-
-### 🔹 IOT DIGITAL TWIN
-
-- Integrate real-world sensor APIs  
-- Deploy as live smart-city infrastructure system  
-
-# 💻 HOW TO RUN
-
-### 1️⃣ INSTALL DEPENDENCIES
-pip install openenv pydantic uvicorn
-
-### 2️⃣ START SERVER (TERMINAL 1)
-uv run --active server
-
-### 3️⃣ RUN AGENT (TERMINAL 2)
-python baseline.py
-
-# 📁 PROJECT STRUCTURE
-
-universal_agent_env/
-├── README.md
-├── baseline.py
-├── client.py
-├── models.py
-└── server/
-    ├── universal_agent_env_environment.py
-    └── app.py
+## 📁 Project Structure
+```
+hydraulic_os/
+├── inference.py        # Memory-enabled strategic agent
+├── server/
+│   └── app.py          # Multi-zone physics engine + UI
+├── pyproject.toml      # Dependency management
+└── README.md
+```
