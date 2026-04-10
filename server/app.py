@@ -89,14 +89,19 @@ class FloodEnvironment:
         self.zone_a_level = max(0.0, min(self.zone_a_level - drain_a, 100.0))
         self.zone_b_level = max(0.0, min(self.zone_b_level - drain_b, 100.0))
         self.pump_temp = max(35, self.pump_temp - 3)
+        
         done = False
-        reward = 0.0
+        # FIX 1: Baseline reward is 0.01 to avoid logging an exact 0.0
+        reward = 0.01 
+        
         if self.zone_b_level >= 100.0 or self.pump_temp >= 100 or self.grid_health <= 0:
-            done, reward, obs = True, 0.0, "CRITICAL_SYSTEM_FAILURE"
+            # FIX 2: Critical failure logs 0.01 instead of 0.0
+            done, reward, obs = True, 0.01, "CRITICAL_SYSTEM_FAILURE"
         elif self.zone_a_level >= 100.0:
             done, reward, obs = True, 0.3, "RESIDENTIAL_FLOOD_FAILURE"
         elif self.step_count >= self.max_steps:
-            done, reward, obs = True, 1.0, "SUCCESS: Mission Complete"
+            # FIX 3: Mission complete logs 0.99 instead of 1.0
+            done, reward, obs = True, 0.99, "SUCCESS: Mission Complete"
         else:
             obs = self._generate_observation()
             if self.zone_a_level < 75 and self.zone_b_level < 75 and self.blockage < 30:
@@ -454,7 +459,6 @@ def home():
 <body>
 <div class="wrapper">
 
-  <!-- Header -->
   <header>
     <div>
       <div class="logo">HYDRAULIC<span>_</span>OS <span>v9.0</span></div>
@@ -466,13 +470,11 @@ def home():
     </div>
   </header>
 
-  <!-- Alert strip -->
   <div id="status-strip">
     <div class="dot"></div>
     <span id="alert-text">LOADING TELEMETRY...</span>
   </div>
 
-  <!-- Top panels: key metrics -->
   <div class="grid-3">
     <div class="panel" style="--panel-accent: var(--amber);">
       <div class="panel-label">Grid Power</div>
@@ -491,7 +493,6 @@ def home():
     </div>
   </div>
 
-  <!-- Zone levels -->
   <div class="grid" style="margin-bottom:14px;">
     <div class="zone-panel">
       <div class="tank" id="tank-a">
@@ -519,7 +520,6 @@ def home():
     </div>
   </div>
 
-  <!-- System bars -->
   <div class="panel" style="margin-bottom:14px;">
     <div class="panel-label">System Telemetry</div>
     <div class="meter-section">
@@ -554,14 +554,12 @@ def home():
     </div>
   </div>
 
-  <!-- Action log -->
   <div class="action-log">
     <div class="log-line">[SYS] HYDRAULIC_OS INITIALIZED — DYNAMIC FEEDBACK LOOP ACTIVE</div>
     <div class="log-line">[SYS] AWAITING AGENT COMMANDS...</div>
     <div class="log-line active">>> LAST ACTION: <span id="last-action">–</span><span class="cursor"></span></div>
   </div>
 
-  <!-- Footer -->
   <footer>
     <span>HYDRAULIC_OS v9.0 · scalerxMeta</span>
     <span id="conn-status">● LIVE</span>
