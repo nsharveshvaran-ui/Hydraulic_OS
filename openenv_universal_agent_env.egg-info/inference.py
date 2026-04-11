@@ -149,11 +149,17 @@ def run_inference():
 
                 print(f"[STEP] step={step} action=idle_recharge reward={dummy_reward:.2f} done={is_done_str} error=null", flush=True)
 
-        # SUCCESS LOGIC
-        success      = "true" if sum(rewards_list) > 0.4 else "false"
-        rewards_csv  = ",".join(f"{r:.2f}" for r in rewards_list)
+        # SUCCESS LOGIC & EXPLICIT SCORE CALCULATION
+        avg_reward = sum(rewards_list) / len(rewards_list) if rewards_list else 0.01
+        
+        # Clamp the final task score to guarantee it never hits 0.0 or 1.0
+        task_score = max(0.01, min(avg_reward, 0.99))
+        
+        success = "true" if task_score > 0.4 else "false"
+        rewards_csv = ",".join(f"{r:.2f}" for r in rewards_list)
 
-        print(f"[END] success={success} steps={len(rewards_list)} rewards={rewards_csv}", flush=True)
+        # 🔥 THE FIX: Explicitly pass score={task_score} so the platform stops guessing 1.0 or 0.0
+        print(f"[END] success={success} score={task_score:.2f} steps={len(rewards_list)} rewards={rewards_csv}", flush=True)
 
 if __name__ == "__main__":
     run_inference()
