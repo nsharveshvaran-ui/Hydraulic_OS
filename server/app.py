@@ -262,6 +262,15 @@ def step_env(req: StepRequest): return env.step(req.action)
 @app.get("/health")
 def health(): return {"status": "healthy"}
 
-if __name__ == "__main__":
+# --- YOUR EXISTING ROUTES (/reset, /step, /health) ---
+
+# 🔥 THE CRITICAL FIX: 
+# The validator specifically needs a named function called 'main'
+def main():
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # If your file is in a folder named 'server', use "server.app:app"
+    # If it's just in the root, use "app:app"
+    uvicorn.run("server.app:app", host="0.0.0.0", port=8000, reload=False)
+
+if __name__ == "__main__":
+    main()
