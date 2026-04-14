@@ -486,6 +486,26 @@ setInterval(poll, 2000);
 # ================================
 # 🚀 ENTRY POINT
 # ================================
+# ================================
+# 🖥️ CYBERNETIC DASHBOARD
+# ================================
+
+# Define the variable first so the function can find it
+HTML_UI_CODE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Hydraulic_OS v9.0</title>
+    </body>
+</html>"""
+
+@app.get("/", response_class=HTMLResponse)
+@app.get("/{path:path}", response_class=HTMLResponse)
+async def home(path: str = None):
+    # This now works because HTML_UI_CODE is defined above
+    return HTML_UI_CODE
+
 def main():
     uvicorn.run("server.app:app", host="0.0.0.0", port=7860, reload=False)
 
